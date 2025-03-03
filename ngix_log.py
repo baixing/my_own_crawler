@@ -8,7 +8,9 @@ import requests
 import tarfile
 import subprocess
 import pandas as pd
+import json
 from datetime import datetime
+from constants import OLD_CATEGORIES, LEVEL1_CATEGORIES
 
 
 def download_file(url, save_path):
@@ -30,7 +32,7 @@ def download_file(url, save_path):
                     # 显示下载进度
                     done = int(50 * downloaded / total_size)
                     print(
-                        f"\r下载进度: [{'=' * done}{' ' * (50-done)}] {downloaded}/{total_size} 字节",
+                        f"\r下载进度: [{'=' * done}{' ' * (50 - done)}] {downloaded}/{total_size} 字节",
                         end="",
                     )
 
@@ -75,10 +77,37 @@ def grep_baidu(directory, output_file):
         return False
 
 
+def get_valid_cities():
+    """获取所有有效城市的英文名列表"""
+    try:
+        url = "https://api.baixing.com.cn/v2/city"
+        payload = {}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+        data = response.json()
+
+        # 提取所有城市的英文名
+        valid_cities = []
+        for province in data.get('data', []):
+            for city in province.get('cities', []):
+                if 'englishname' in city:
+                    valid_cities.append(city['englishname'].lower())
+
+        return valid_cities
+    except Exception as e:
+        print(f"获取城市列表失败: {e}")
+        return []
+
+
 def convert_to_excel(text_file, excel_file):
-    """将文本文件转换为Excel格式"""
+    """将文本文件转换为Excel格式，提取时间、状态码、城市、请求地址和请求路径"""
     print(f"正在将 {text_file} 转换为Excel格式...")
     try:
+        # 获取有效城市列表
+        valid_cities = get_valid_cities()
+        print(f"获取到 {len(valid_cities)} 个有效城市")
+
         # 读取文本文件
         with open(text_file, "r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
@@ -86,29 +115,155 @@ def convert_to_excel(text_file, excel_file):
         # 处理数据
         data = []
         for line in lines:
-            # 分割行内容（按空格分割）
-            parts = line.strip().split()
+            try:
+                # 分割行内容，首先去除文件路径部分
+                log_content = line.split(':', 1)[1].strip()
 
-            # 移除每个部分中的引号
-            cleaned_parts = []
-            for part in parts:
-                # 移除开头和结尾的引号（如果存在）
-                if part.startswith('"') and part.endswith('"'):
-                    part = part[1:-1]
-                # 移除其他引号
-                part = part.replace('"', "")
-                cleaned_parts.append(part)
+                # 提取时间
+                # 格式示例: Mar  3 14:51:09
+                time_parts = log_content.split()[:3]
+                month = time_parts[0]
+                day = time_parts[1]
+                time = time_parts[2]
+                # 将月份名转换为数字
+                month_map = {
+                    'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                    'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                    'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                }
+                month_num = month_map[month]
+                # 格式化日期（补零）
+                day = day.zfill(2)
 
-            data.append(cleaned_parts)
+                # 使用空格分割，但保留引号内的内容
+                parts = []
+                current_part = ''
+                in_quotes = False
+                for char in log_content:
+                    if char == '"':
+                        in_quotes = not in_quotes
+                        current_part += char
+                    elif char.isspace() and not in_quotes:
+                        if current_part:
+                            parts.append(current_part)
+                            current_part = ''
+                    else:
+                        current_part += char
+                if current_part:
+                    parts.append(current_part)
 
-        # 确定最大列数
-        max_cols = max(len(row) for row in data) if data else 0
+                # 提取状态码和毫秒
+                # 找到包含tengine[的部分之后的内容
+                log_parts = log_content.split('tengine[')[1].split(':', 1)[1].strip().split()
+                # 第一个是时间戳，提取毫秒部分
+                timestamp = log_parts[0]
+                milliseconds = timestamp.split('.')[1][:3] if '.' in timestamp else '000'
+                # 第二个数字是状态码
+                status_code = log_parts[1]
 
-        # 创建列名
-        columns = [f"Column_{i+1}" for i in range(max_cols)]
+                # 合并时间和毫秒
+                formatted_time = f"{month_num}-{day} {time}.{milliseconds}"
+
+                # 提取请求地址和城市
+                host = None
+                city = None
+                for part in parts:
+                    if '.baixing.com' in part:
+                        host = part.strip('"')
+                        # 修改城市提取逻辑，获取最靠近baixing.com的域名部分
+                        domains = host.split('.')
+                        for i, domain in enumerate(domains):
+                            if domain == 'baixing':
+                                city = domains[i - 1] if i > 0 else ''
+                                break
+                        break
+
+                # 提取请求路径
+                request_path = None
+                for part in parts:
+                    if part.startswith('"GET ') or part.startswith('"POST '):
+                        request_path = part.split()[1]
+                        break
+
+                # 检查城市是否在有效列表中
+                is_valid_city = 'true' if city and city.lower() in valid_cities else 'false'
+
+                # 判断请求类型
+                request_type = 'other'  # 默认类型
+                if request_path:
+                    # 如果路径中包含问号，只保留问号之前的部分
+                    if '?' in request_path:
+                        request_path = request_path.split('?')[0]
+
+                    if request_path in ['/', '/m/', '/m']:
+                        request_type = 'main'
+                    elif '/kf53' in request_path:
+                        request_type = '53kf'
+                    elif '.html' in request_path:
+                        request_type = 'ad'
+                    elif request_path.startswith('/_next/'):
+                        request_type = 'get_resource'
+                    elif request_path.startswith('/m/root') or request_path.startswith(
+                            '/root') or request_path.startswith('/search'):
+                        request_type = 'search'
+                if host and 'mpapi.baixing.com' in host:
+                    request_type = 'get_resource'
+
+                # 提取分类
+                category = ''
+                if request_type == 'main':
+                    category = 'all'
+
+                elif request_type in ['get_resource', '53kf', 'search']:
+                    category = 'noneed'
+                elif request_path:
+                    # 移除开头的/和结尾的/
+                    clean_path = request_path.strip('/')
+                    if clean_path:
+                        parts = clean_path.split('/')
+                        if parts[0] == 'm' and len(parts) > 1:
+                            category = parts[1]  # 取/m/后的第一个部分
+                        else:
+                            category = parts[0]  # 取第一个部分
+
+                # 检查category是否包含下划线，如果包含则更新request_type
+                if category and '_' in category:
+                    request_type = 'unknow_categroy'
+                # 合并不常用接口
+                elif category in ['a', 'v', 'w', 'oz', 'ra', 'help', 'bind', 'credit', 'PublicReview', 'weishop',
+                                  'fabu', 'showImg'] or request_type == '53kf':
+                    request_type = '不常用接口'
+                    category = 'noneed'
+                # 检查是否是简历
+                elif category in ['resumes', 'resume']:
+                    request_type = 'resume'
+                # arch也合并到get_resource    
+                elif category == 'arch':
+                    request_type = 'get_resource'
+                # 检查是否是一级类目
+                elif category in LEVEL1_CATEGORIES:
+                    request_type = 'old_Level1_category'
+                # 检查是否是旧类目
+                elif category in OLD_CATEGORIES:
+                    request_type = 'old_categroy'
+                if request_type in ['old_categroy', 'old_Level1_category', 'main', 'ad', 'search']:
+                    request_type = '首页/listing/vad/search'
+                if request_type != '首页/listing/vad/search' and  category !='noneed':
+                    category = 'None'
+                if '.html' in category:
+                    request_type = '首页/listing/vad/search'
+                    category = 'nocategroy'
+                if all([formatted_time, status_code, city, is_valid_city, host, request_path]):  # 只添加完整的记录
+                    data.append(
+                        [formatted_time, status_code, city, is_valid_city, host, request_path, request_type, category])
+
+            except Exception as e:
+                print(f"处理行时出错: {e}")
+                continue
 
         # 创建DataFrame
-        df = pd.DataFrame(data, columns=columns)
+        df = pd.DataFrame(data,
+                          columns=['时间', '状态码', '城市', 'is_city', '请求地址', '请求路径', 'type', 'category'])
 
         # 保存为Excel
         df.to_excel(excel_file, index=False, engine="openpyxl")
