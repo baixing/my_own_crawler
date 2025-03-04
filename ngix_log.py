@@ -9,9 +9,9 @@ import tarfile
 import subprocess
 import pandas as pd
 import json
+import re
 from datetime import datetime
-from constants import OLD_CATEGORIES, LEVEL1_CATEGORIES
-
+from constants import OLD_CATEGORIES, LEVEL1_CATEGORIES, CATEGORY_TO_LEVEL1
 
 def download_file(url, save_path):
     """从指定URL下载文件"""
@@ -246,6 +246,61 @@ def convert_to_excel(text_file, excel_file):
                 # 检查是否是旧类目
                 elif category in OLD_CATEGORIES:
                     request_type = 'old_categroy'
+
+                # 判断unfix_categroy
+                unfix_categroy = 'unkown'
+                # 检查host中baixing.com前面的domain段数
+                if host:
+                    domains = host.split('.')
+                    baixing_index = domains.index('baixing') if 'baixing' in domains else -1
+                    if baixing_index > 1:  # 如果baixing前面超过1段domain
+                        unfix_categroy = 'true'
+                # 先判断是否包含.html
+                if '.html' in request_path:
+                    unfix_categroy = 'false'
+                # 匹配 /mxxxx/ 格式
+                elif re.search(r'/m\d+/', request_path):
+                    unfix_categroy = 'true'
+                elif '/cart' in request_path:
+                    unfix_categroy = 'true'
+                # 匹配 /mxxxx-mxxxx/ 格式
+                elif re.search(r'/m\d+-m\d+/', request_path):
+                    unfix_categroy = 'true'
+                if '/info/' in request_path:
+                    unfix_categroy = 'true'
+
+                # 确定belong_to_level1的值
+                belong_to_level1 = 'None'
+                if request_type == 'old_Level1_category':
+                    belong_to_level1 = category
+                elif request_type == 'old_categroy':
+                    belong_to_level1 = CATEGORY_TO_LEVEL1.get(category, 'None')
+
+                # 确定expect_code的值
+                expect_code = 'unkown'
+                if request_path == '/m' or request_path.startswith('/m/'):
+                    expect_code = '301'
+                elif 'info' in request_path:
+                    expect_code = '404'
+                elif '_' in request_path:
+                    expect_code = '404'
+                elif unfix_categroy == 'true':
+                    expect_code = '404'
+
+                # 确定adid和ad_isexist的值
+                adid = ''
+                ad_isexist = 'unkown'
+                ad_isexist_inb = 'unkown'
+                if (expect_code == 'unkown' and
+                    request_type not in ('get_resource', '不常用接口') and 
+                    status_code == '404' and 
+                    '.html' in request_path) and is_valid_city == 'true':
+                    # 提取帖子ID
+                    match = re.search(r'/[^/]+/(?:a)?(\d+)\.html', request_path)
+                    if match:
+                        adid = match.group(1)
+                        ad_isexist = 'pending'
+
                 if request_type in ['old_categroy', 'old_Level1_category', 'main', 'ad', 'search']:
                     request_type = '首页/listing/vad/search'
                 if request_type != '首页/listing/vad/search' and  category !='noneed':
@@ -253,22 +308,37 @@ def convert_to_excel(text_file, excel_file):
                 if '.html' in category:
                     request_type = '首页/listing/vad/search'
                     category = 'nocategroy'
+                if  request_type in  ['get_resource','不常用接口']:
+                    expect_code = '不重要'
+
                 if all([formatted_time, status_code, city, is_valid_city, host, request_path]):  # 只添加完整的记录
                     data.append(
-                        [formatted_time, status_code, city, is_valid_city, host, request_path, request_type, category])
+                        [formatted_time, status_code, city, is_valid_city, host, request_path, request_type, category, belong_to_level1, unfix_categroy, expect_code, ad_isexist,ad_isexist_inb, adid])
 
             except Exception as e:
                 print(f"处理行时出错: {e}")
                 continue
 
         # 创建DataFrame
-        df = pd.DataFrame(data,
-                          columns=['时间', '状态码', '城市', 'is_city', '请求地址', '请求路径', 'type', 'category'])
+        df = pd.DataFrame(data, columns=['time', 'status_code', 'city', 'is_valid_city', 'host', 'request_path', 
+                                       'request_type', 'category', 'belong_to_level1', 'unfix_categroy', 'expect_code', 'ad_isexist','ad_isexist_inb', 'adid'])
 
         # 保存为Excel
         df.to_excel(excel_file, index=False, engine="openpyxl")
 
+        # 获取第一行的时间并格式化文件名
+        first_time = df['time'].iloc[0]  # 格式如 "03-04 14:51:09.221"
+        time_parts = first_time.split()
+        date = time_parts[0]  # "03-04"
+        hour = time_parts[1].split(':')[0]  # "14"
+        date_parts = date.split('-')  # ["03", "04"]
+        current_dir_excel = f"{date_parts[0]}_{date_parts[1]}_{hour}_result.xlsx"
+
+        # 复制一份Excel文件到当前目录
+        df.to_excel(current_dir_excel, index=False, engine="openpyxl")
+
         print(f"转换完成! Excel文件已保存为 {excel_file}")
+        print(f"同时在当前目录保存了一份副本: {current_dir_excel}")
         return True
     except Exception as e:
         print(f"转换失败: {e}")
