@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 import subprocess
 import time
+import glob
 
 # 设置日志
 def setup_logging():
@@ -26,6 +27,16 @@ def setup_logging():
             logging.StreamHandler(sys.stdout)
         ]
     )
+
+def find_latest_excel():
+    """查找最新生成的Excel文件"""
+    # 查找当前目录下所有的*_result.xlsx文件
+    excel_files = glob.glob("*_result.xlsx")
+    if not excel_files:
+        return None
+    
+    # 按文件修改时间排序，返回最新的
+    return max(excel_files, key=os.path.getmtime)
 
 def update_constants_file(excel_file):
     """更新constants.py中的RESULT_FILE值"""
@@ -50,6 +61,8 @@ def run_script(script_name):
             text=True
         )
         logging.info(f"{script_name} 执行成功")
+        if result.stdout:
+            logging.info(f"输出: {result.stdout}")
         return True
     except subprocess.CalledProcessError as e:
         logging.error(f"{script_name} 执行失败: {str(e)}")
@@ -67,15 +80,19 @@ def main():
         if not run_script('ngix_log.py'):
             raise Exception("nginx日志处理失败")
 
-        # 等待文件生成
+        # 等待文件生成并列出当前目录文件
         time.sleep(5)
+        logging.info("当前目录文件列表:")
+        for file in os.listdir('.'):
+            if file.endswith('.xlsx'):
+                logging.info(f"- {file} (修改时间: {datetime.fromtimestamp(os.path.getmtime(file))})")
         
-        # 获取生成的Excel文件名
-        current_time = datetime.now()
-        excel_file = f"{current_time.strftime('%m_%d_%H')}_result.xlsx"
+        # 查找最新生成的Excel文件
+        excel_file = find_latest_excel()
+        if not excel_file:
+            raise Exception("未找到生成的Excel文件")
         
-        if not os.path.exists(excel_file):
-            raise Exception(f"未找到生成的Excel文件: {excel_file}")
+        logging.info(f"找到最新的Excel文件: {excel_file}")
         
         # 2. 更新constants.py中的RESULT_FILE
         logging.info(f"更新RESULT_FILE为: {excel_file}")
