@@ -61,8 +61,13 @@ def analyze_results():
         status_45xx_count = len(df[df['status_code'].str.match(r'^[45]')])
 
         # 5. 统计expect_code不为3xx和4xx的数量
-        non_34xx_mask = ~(df['expect_code'].str.match(r'^[34]', na=False) | (df['expect_code'] == '不重要') | (df['category'].isin(['nocategroy','noneed'])) )
+        non_34xx_mask = ~(
+    df['expect_code'].str.match(r'^[34]', na=False) | 
+    (df['expect_code'].str.strip() == '不重要') |  # 添加 str.strip() 去除可能的空白字符
+    (df['category'].str.strip().isin(['nocategroy', 'noneed','None']))  # 添加 str.strip() 去除可能的空白字符
+)
         non_34xx_count = len(df[non_34xx_mask])
+        print(non_34xx_count)
         
         # 打印所有唯一的request_type值，帮助调试
         print("\nrequest_type的唯一值:")
@@ -70,15 +75,15 @@ def analyze_results():
 
         # 6. 在第5个基础上，筛选is_valid_city为true的数量
         valid_city_mask = (non_34xx_mask) & \
-                         (df['is_valid_city'].isin(['1','true'])) & \
+                         (df['is_valid_city'].isin(['yes'])) & \
                          (~df['request_type'].isin(['get_resource', '不常用接口']))
         valid_city_count = len(df[valid_city_mask])
+        print(valid_city_count)
 
         # 打印调试信息
         print(f"\n调试信息:")
         print(f"is_valid_city的唯一值: {df['is_valid_city'].unique()}")
         print(f"non_34xx_mask为True的数量: {non_34xx_mask.sum()}")
-        print(f"is_valid_city为true的数量: {(df['is_valid_city'] == 'true').sum()}")
         print(f"组合条件为True的数量: {valid_city_mask.sum()}")
 
         # 7,8,9. 在第6个基础上的统计

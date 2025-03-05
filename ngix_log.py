@@ -186,7 +186,7 @@ def convert_to_excel(text_file, excel_file):
                         break
 
                 # 检查城市是否在有效列表中
-                is_valid_city = 'true' if city and city.lower() in valid_cities else 'false'
+                is_valid_city = 'yes' if city and city.lower() in valid_cities else 'no'
 
                 # 判断请求类型
                 request_type = 'other'  # 默认类型
