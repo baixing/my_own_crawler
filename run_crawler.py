@@ -100,8 +100,8 @@ def main():
         
         # 3. 依次执行其他脚本
         scripts = [
-            'process_ad_exist.py',
-            'process_ad_exist_in_b.py',
+            # 'process_ad_exist.py',
+            # 'process_ad_exist_in_b.py',
             'result_analyze.py'
         ]
         
