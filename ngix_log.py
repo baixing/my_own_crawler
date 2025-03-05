@@ -11,7 +11,12 @@ import pandas as pd
 import json
 import re
 from datetime import datetime
-from constants import OLD_CATEGORIES, LEVEL1_CATEGORIES, CATEGORY_TO_LEVEL1
+from constants import OLD_CATEGORIES, LEVEL1_CATEGORIES, CATEGORY_TO_LEVEL1, NO_IMPORTANT_PATH,FOUR_XX_PATH
+
+
+def contains_any(lst, elements):
+    return bool(set(lst) & set(elements))
+
 
 def download_file(url, save_path):
     """从指定URL下载文件"""
@@ -187,141 +192,86 @@ def convert_to_excel(text_file, excel_file):
 
                 # 检查城市是否在有效列表中
                 is_valid_city = 'true' if city and city.lower() in valid_cities else 'false'
-
                 # 判断请求类型
-                request_type = 'other'  # 默认类型
-                if request_path:
-                    # 如果路径中包含问号，只保留问号之前的部分
-                    if '?' in request_path:
-                        request_path = request_path.split('?')[0]
+                request_type = 'None'  # 默认类型
+                original_path = request_path
+                expect_code = 'Non expect'
+                category = '不重要'
+                belong_to_level1 = 'None'
+
+                # request_path
+                # 检查category,expect_code,belong_to_level1
+
+                domains = host.split('.')
+                baixing_index = domains.index('baixing') if 'baixing' in domains else -1
+                if baixing_index > 1:  # 如果baixing前面超过1段domain
+                    expect_code = '404'
+                elif re.search(r'/m\d+/', request_path) or re.search(r'/m\d+-m\d+/', request_path)  or contains_any(request_path, FOUR_XX_PATH):
+                    expect_code = '404'
+                elif host == 'mpapi.baixing.com':
+                    expect_code = '404'
+
+
+                else:
+                # 移除开头的/和结尾的/
+                    if '?' in original_path:
+                        request_path = original_path.split('?')[0]
 
                     if request_path in ['/', '/m/', '/m']:
                         request_type = 'main'
-                    elif '/kf53' in request_path:
-                        request_type = '53kf'
-                    elif '.html' in request_path:
-                        request_type = 'ad'
-                    elif request_path.startswith('/_next/'):
-                        request_type = 'get_resource'
-                    elif request_path.startswith('/m/root') or request_path.startswith(
-                            '/root') or request_path.startswith('/search'):
-                        request_type = 'search'
-                if host and 'mpapi.baixing.com' in host:
-                    request_type = 'get_resource'
+                        category = 'all'
+                        expect_code = '404'
+                    elif '/m/' in request_path:
+                        expect_code = '301'
+                    else:
+                        clean_path = request_path.strip('/')
+                        if clean_path:
+                            # print(clean_path)
+                            parts = clean_path.split('/')
 
-                # 提取分类
-                category = ''
-                if request_type == 'main':
-                    category = 'all'
+                            if parts[0] == 'm' and len(parts) > 1:
+                                category = parts[1]  # 取/m/后的第一个部分
+                            else:
+                                category = parts[0]  # 取第一个部分
+                            if category and '_' in category:
+                                expect_code = '404'
 
-                elif request_type in ['get_resource', '53kf', 'search']:
-                    category = 'noneed'
-                elif request_path:
-                    # 移除开头的/和结尾的/
-                    clean_path = request_path.strip('/')
-                    if clean_path:
-                        parts = clean_path.split('/')
-                        if parts[0] == 'm' and len(parts) > 1:
-                            category = parts[1]  # 取/m/后的第一个部分
+                        if contains_any(request_path, NO_IMPORTANT_PATH) or category == 'arch':
+                            request_type = 'NotImportant'
+                        elif category in ['resumes', 'resume']:
+                            request_type = 'resume'
+                        # 检查是否是一级类目
+                        elif category in LEVEL1_CATEGORIES:
+                            request_type = 'old_Level1_category'
+                            belong_to_level1 = category
+                        # 检查是否是旧类目
+                        elif category in OLD_CATEGORIES:
+                            request_type = 'old_categroy'
+                            belong_to_level1 = CATEGORY_TO_LEVEL1.get(category, 'None')
                         else:
-                            category = parts[0]  # 取第一个部分
-
-                # 检查category是否包含下划线，如果包含则更新request_type
-                if category and '_' in category:
-                    request_type = 'unknow_categroy'
-                # 合并不常用接口
-                elif category in ['a', 'v', 'w', 'oz', 'ra', 'help', 'bind', 'credit', 'PublicReview', 'weishop',
-                                  'fabu', 'showImg'] or request_type == '53kf':
-                    request_type = '不常用接口'
-                    category = 'noneed'
-                # 检查是否是简历
-                elif category in ['resumes', 'resume']:
-                    request_type = 'resume'
-                # arch也合并到get_resource    
-                elif category == 'arch':
-                    request_type = 'get_resource'
-                # 检查是否是一级类目
-                elif category in LEVEL1_CATEGORIES:
-                    request_type = 'old_Level1_category'
-                # 检查是否是旧类目
-                elif category in OLD_CATEGORIES:
-                    request_type = 'old_categroy'
-
-                # 判断unfix_categroy
-                unfix_categroy = 'unkown'
-                # 检查host中baixing.com前面的domain段数
-                if host:
-                    domains = host.split('.')
-                    baixing_index = domains.index('baixing') if 'baixing' in domains else -1
-                    if baixing_index > 1:  # 如果baixing前面超过1段domain
-                        unfix_categroy = 'true'
-                # 先判断是否包含.html
-                if '.html' in request_path:
-                    unfix_categroy = 'false'
-                # 匹配 /mxxxx/ 格式
-                elif re.search(r'/m\d+/', request_path):
-                    unfix_categroy = 'true'
-                elif '/cart' in request_path:
-                    unfix_categroy = 'true'
-                # 匹配 /mxxxx-mxxxx/ 格式
-                elif re.search(r'/m\d+-m\d+/', request_path):
-                    unfix_categroy = 'true'
-                if '/info/' in request_path:
-                    unfix_categroy = 'true'
-
-                # 确定belong_to_level1的值
-                belong_to_level1 = 'None'
-                if request_type == 'old_Level1_category':
-                    belong_to_level1 = category
-                elif request_type == 'old_categroy':
-                    belong_to_level1 = CATEGORY_TO_LEVEL1.get(category, 'None')
-
-                # 确定expect_code的值
-                expect_code = 'unkown'
-                if request_path == '/m' or request_path.startswith('/m/'):
-                    expect_code = '301'
-                elif 'info' in request_path:
-                    expect_code = '404'
-                elif '_' in request_path:
-                    expect_code = '404'
-                elif unfix_categroy == 'true':
-                    expect_code = '404'
-
-                # 确定adid和ad_isexist的值
-                adid = ''
-                ad_isexist = 'unkown'
-                ad_isexist_inb = 'unkown'
-                if (expect_code == 'unkown' and
-                    request_type not in ('get_resource', '不常用接口') and 
-                    status_code == '404' and 
-                    '.html' in request_path) and is_valid_city == 'true':
-                    # 提取帖子ID
-                    match = re.search(r'/[^/]+/(?:a)?(\d+)\.html', request_path)
-                    if match:
-                        adid = match.group(1)
-                        ad_isexist = 'pending'
-
-                if request_type in ['old_categroy', 'old_Level1_category', 'main', 'ad', 'search']:
-                    request_type = '首页/listing/vad/search'
-                if request_type != '首页/listing/vad/search' and  category !='noneed':
-                    category = 'None'
-                if '.html' in category:
-                    request_type = '首页/listing/vad/search'
-                    category = 'nocategroy'
-                if  request_type in  ['get_resource','不常用接口']:
-                    expect_code = '不重要'
-
-                if all([formatted_time, status_code, city, is_valid_city, host, request_path]):  # 只添加完整的记录
-                    data.append(
-                        [formatted_time, status_code, city, is_valid_city, host, request_path, request_type, category, belong_to_level1, unfix_categroy, expect_code, ad_isexist,ad_isexist_inb, adid])
+                            category = '不合法类目'
+                        if request_type in ['old_categroy', 'old_Level1_category', 'main']:
+                            request_type = 'ImportantInfo'
+                        if (expect_code == 'Non expect' and
+                            request_type not in ('NotImportant') and
+                            status_code == '404' and
+                            '.html' in request_path) and is_valid_city == 'true':
+                            # 提取帖子ID
+                            match = re.search(r'/[^/]+/(?:a)?(\d+)\.html', request_path)
+                            if match:
+                                expect_code = '404'
+                print(expect_code)
+                data.append(
+                        [formatted_time, status_code, city, is_valid_city, host, original_path,request_path, request_type, category,belong_to_level1,expect_code])
 
             except Exception as e:
                 print(f"处理行时出错: {e}")
                 continue
 
         # 创建DataFrame
-        df = pd.DataFrame(data, columns=['time', 'status_code', 'city', 'is_valid_city', 'host', 'request_path', 
-                                       'request_type', 'category', 'belong_to_level1', 'unfix_categroy', 'expect_code', 'ad_isexist','ad_isexist_inb', 'adid'])
+        df = pd.DataFrame(data, columns=['time', 'status_code', 'city', 'is_valid_city', 'host', 'original_path','request_path',
+                                         'request_type', 'category', 'belong_to_level1',
+                                         'expect_code'])
 
         # 保存为Excel
         df.to_excel(excel_file, index=False, engine="openpyxl")

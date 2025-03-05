@@ -100,14 +100,14 @@ def analyze_results():
         new_data = {
             'time': [time_key],
             'total_count': [total_count],
-            'status_200_count': [status_200_count],
-            'status_45xx_count': [status_45xx_count],
+            '2xx量': [status_200_count],
+            '45xx量': [status_45xx_count],
             # '剔除预期3xx4xx和不重要的请求': [non_34xx_count],
-            '剔除34xx预期和不重要的接口': [valid_city_count],
-            'valid_city_23xx_count': [status_23xx_count],
-            'valid_city_2xx_count': [status_2xx_count],
-            'valid_city_45xx_count': [status_45xx_valid_count],
-            'abnormal_count': [abnormal_count]
+            # '剔除34xx预期和不重要的接口': [valid_city_count],
+            # 'valid_city_23xx_count': [status_23xx_count],
+            '类目/vad重要2xx量': [status_2xx_count],
+            # 'valid_city_45xx_count': [status_45xx_valid_count],
+            # 'abnormal_count': [abnormal_count]
         }
         new_df = pd.DataFrame(new_data)
 
