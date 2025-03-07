@@ -1,0 +1,80 @@
+[2025-03-07 23:34:30 +0800] [11599] [INFO] Starting gunicorn 20.1.0
+[2025-03-07 23:34:30 +0800] [11599] [INFO] Listening at: http://0.0.0.0:5001 (11599)
+[2025-03-07 23:34:30 +0800] [11599] [INFO] Using worker: sync
+[2025-03-07 23:34:30 +0800] [11600] [INFO] Booting worker with pid: 11600
+[2025-03-07 23:34:30 +0800] [11601] [INFO] Booting worker with pid: 11601
+[2025-03-07 23:34:30 +0800] [11600] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 589, in spawn_worker
+    worker.init_process()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/workers/base.py", line 134, in init_process
+    self.load_wsgi()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/workers/base.py", line 146, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
+    return self.load_wsgiapp()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/util.py", line 359, in import_app
+    mod = importlib.import_module(module)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/app.py", line 4, in <module>
+    from flask import Flask, render_template, jsonify
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/__init__.py", line 7, in <module>
+    from .app import Flask as Flask
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/app.py", line 28, in <module>
+    from . import cli
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/cli.py", line 18, in <module>
+    from .helpers import get_debug_flag
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/helpers.py", line 16, in <module>
+    from werkzeug.urls import url_quote
+ImportError: cannot import name 'url_quote' from 'werkzeug.urls' (/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/werkzeug/urls.py)
+[2025-03-07 23:34:30 +0800] [11601] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 589, in spawn_worker
+    worker.init_process()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/workers/base.py", line 134, in init_process
+    self.load_wsgi()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/workers/base.py", line 146, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
+    return self.load_wsgiapp()
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/gunicorn/util.py", line 359, in import_app
+    mod = importlib.import_module(module)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/app.py", line 4, in <module>
+    from flask import Flask, render_template, jsonify
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/__init__.py", line 7, in <module>
+    from .app import Flask as Flask
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/app.py", line 28, in <module>
+    from . import cli
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/cli.py", line 18, in <module>
+    from .helpers import get_debug_flag
+  File "/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/flask/helpers.py", line 16, in <module>
+    from werkzeug.urls import url_quote
+ImportError: cannot import name 'url_quote' from 'werkzeug.urls' (/Users/baixing/Desktop/Myproject/bx/my_own_crawler/venv/lib/python3.10/site-packages/werkzeug/urls.py)
+[2025-03-07 23:34:30 +0800] [11600] [INFO] Worker exiting (pid: 11600)
+[2025-03-07 23:34:30 +0800] [11601] [INFO] Worker exiting (pid: 11601)
+[2025-03-07 23:34:52 +0800] [11727] [INFO] Starting gunicorn 20.1.0
+[2025-03-07 23:35:00 +0800] [11599] [INFO] Shutting down: Master
+[2025-03-07 23:35:00 +0800] [11599] [INFO] Reason: Worker failed to boot.

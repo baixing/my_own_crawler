@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>洛邑（baixing.com.cn）数据统计</title>
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .metric-title {
+            color: #666;
+            font-size: 14px;
+        }
+        .trend-up {
+            color: #28a745;
+        }
+        .trend-down {
+            color: #dc3545;
+        }
+        #trendChart {
+            height: 300px;
+            margin: 20px 0;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .url-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .url-cell a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .url-cell a:hover {
+            text-decoration: underline;
+        }
+        .page-title {
+            background: linear-gradient(45deg, #1a73e8, #34a853);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #1a73e8;
+            margin-bottom: 2rem;
+        }
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-top: -1.5rem;
+            margin-bottom: 2rem;
+        }
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+        .left-section {
+            flex: 7;
+        }
+        .right-section {
+            flex: 3;
+        }
+        .zero-value {
+            color: #dc3545;
+            font-weight: bold;
+            position: relative;
+        }
+        .zero-value::after {
+            content: '!';
+            color: #dc3545;
+            font-weight: bold;
+            margin-left: 4px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .warning-row {
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        .warning-row:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+        }
+        .metric-card {
+            margin-bottom: 15px;
+        }
+        .metric-card .card-body {
+            padding: 10px 15px;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="page-title text-center">洛邑</h1>
+        <h2 class="page-subtitle text-center">baixing.com.cn 实时数据监控</h2>
+        
+        <div class="main-content">
+            <!-- 左侧内容 -->
+            <div class="left-section">
+                <!-- 页面访问数据 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">页面访问数据</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>页面URL</th>
+                                        <th class="text-end">浏览量(PV)</th>
+                                        <th class="text-end">下游贡献量</th>
+                                        <th class="text-end">下游贡献率</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pageTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧内容 -->
+            <div class="right-section">
+                <!-- 主要指标卡片 -->
+                <div class="metric-card card">
+                    <div class="card-body">
+                        <h6 class="metric-title">浏览量(PV)</h6>
+                        <div class="metric-value" id="pv">--</div>
+                        <small>昨日: <span id="yesterdayPv">--</span></small>
+                    </div>
+                </div>
+                <div class="metric-card card">
+                    <div class="card-body">
+                        <h6 class="metric-title">访客数(UV)</h6>
+                        <div class="metric-value" id="uv">--</div>
+                        <small>昨日: <span id="yesterdayUv">--</span></small>
+                    </div>
+                </div>
+
+                <!-- 趋势图表 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">访问趋势</h5>
+                        <div id="trendChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最后更新时间 -->
+        <div class="text-end mt-2">
+            <small class="text-muted">最后更新: <span id="lastUpdate">--</span></small>
+        </div>
+    </div>
+
+    <script>
+        // 初始化图表
+        var chartDom = document.getElementById('trendChart');
+        var myChart = echarts.init(chartDom);
+        
+        // 更新数据函数
+        function updateData() {
+            // 获取趋势数据
+            fetch('/api/stats/trend')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const trendData = data.data;
+                        
+                        // 更新图表
+                        const option = {
+                            tooltip: {
+                                trigger: 'axis'
+                            },
+                            legend: {
+                                data: ['PV', 'UV']
+                            },
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '3%',
+                                containLabel: true
+                            },
+                            xAxis: {
+                                type: 'category',
+                                data: trendData.dates,
+                                axisLabel: {
+                                    rotate: 45,
+                                    fontSize: 10
+                                }
+                            },
+                            yAxis: {
+                                type: 'value',
+                                axisLabel: {
+                                    fontSize: 10
+                                }
+                            },
+                            series: [
+                                {
+                                    name: 'PV',
+                                    type: 'line',
+                                    smooth: true,
+                                    data: trendData.values.map(item => item[0])
+                                },
+                                {
+                                    name: 'UV',
+                                    type: 'line',
+                                    smooth: true,
+                                    data: trendData.values.map(item => item[1])
+                                }
+                            ]
+                        };
+                        myChart.setOption(option);
+                    }
+                });
+
+            // 获取今日数据
+            fetch('/api/stats/today')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.data;
+                        
+                        // 更新指标卡片
+                        document.getElementById('pv').textContent = stats.pv.toLocaleString();
+                        document.getElementById('uv').textContent = stats.uv.toLocaleString();
+                        document.getElementById('yesterdayPv').textContent = stats.yesterday_pv.toLocaleString();
+                        document.getElementById('yesterdayUv').textContent = stats.yesterday_uv.toLocaleString();
+                    }
+                });
+
+            // 获取页面访问数据
+            fetch('/api/stats/pages')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const pageData = data.data;
+                        const tbody = document.getElementById('pageTableBody');
+                        
+                        // 清空表格
+                        tbody.innerHTML = '';
+                        
+                        // 添加页面数据行
+                        pageData.pages.forEach(page => {
+                            const row = document.createElement('tr');
+                            const contributionRate = page.outward ? ((page.outward / page.pv) * 100).toFixed(2) : 0;
+                            
+                            // 如果贡献量和贡献率都为0，添加警告样式
+                            if (page.outward === 0) {
+                                row.classList.add('warning-row');
+                            }
+                            
+                            row.innerHTML = `
+                                <td class="url-cell">
+                                    <a href="${page.url}" target="_blank" title="${page.url}">
+                                        ${page.url}
+                                    </a>
+                                </td>
+                                <td class="text-end">${page.pv.toLocaleString()}</td>
+                                <td class="text-end ${page.outward === 0 ? 'zero-value' : ''}">${page.outward.toLocaleString()}</td>
+                                <td class="text-end ${contributionRate == 0 ? 'zero-value' : ''}">${contributionRate}%</td>
+                            `;
+                            
+                            tbody.appendChild(row);
+                        });
+                        
+                        // 更新时间
+                        document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+                    }
+                });
+        }
+
+        // 页面加载时更新数据
+        updateData();
+        
+        // 每5分钟更新一次数据
+        setInterval(updateData, 5 * 60 * 1000);
+
+        // 监听窗口大小变化，调整图表大小
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html> 
