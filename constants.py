@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # 文件名: constants.py
 # 功能: 存储所有常量配置
-RESULT_FILE = '03_04_21_result.xlsx'
+RESULT_FILE = '03_08_20_result.xlsx'
 
 # 一级类目列表
 LEVEL1_CATEGORIES = [

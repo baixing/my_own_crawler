@@ -90,11 +90,11 @@ def analyze_results():
         # 9. 4xx和5xx数量
         status_45xx_valid_count = len(valid_city_df[valid_city_df['status_code'].str.match(r'^[45]')])
 
-        # 10. 统计异常数据：adid不为空，expect_code=200但status_code!=200的数量
-        abnormal_mask = (df['adid'].notna() & (df['adid'] != '')) & \
-                       (df['expect_code'] == '200') & \
-                       (df['status_code'] != '200')
-        abnormal_count = len(df[abnormal_mask])
+        # # 10. 统计异常数据：adid不为空，expect_code=200但status_code!=200的数量
+        # abnormal_mask = (df['adid'].notna() & (df['adid'] != '')) & \
+        #                (df['expect_code'] == '200') & \
+        #                (df['status_code'] != '200')
+        # abnormal_count = len(df[abnormal_mask])
 
         # 准备新的统计数据
         new_data = {

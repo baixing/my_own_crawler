@@ -8,7 +8,7 @@ NC='\033[0m' # No Color
 
 # 定义变量
 APP_NAME="baixing_monitor"
-PORT=5001
+PORT=8081
 VENV_PATH="venv"
 PID_FILE="monitor.pid"
 LOG_FILE="monitor.log"
