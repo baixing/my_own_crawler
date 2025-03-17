@@ -50,7 +50,13 @@ def analyze_results():
         df['status_code'] = df['status_code'].str.strip()
         status_200_mask = (df['status_code'] == '200')
         status_200_count = status_200_mask.sum()  # 改用sum()来计数
+
+        # 新增：统计status_code为200且request_path包含'.html'的数量
+        status_200_html_mask = status_200_mask & df['request_path'].str.contains('.html', na=False)
+        status_200_html_count = status_200_html_mask.sum()
+
         print(f"\nstatus_code为200的行数: {status_200_count}")
+        print(f"status_code为200且包含.html的行数: {status_200_html_count}")
         print("status_200_mask的前几个值:", status_200_mask.head())
         print("status_code等于'200'的比较结果:", (df['status_code'] == '200').head())
         if status_200_count == 0:
@@ -101,6 +107,7 @@ def analyze_results():
             'time': [time_key],
             'total_count': [total_count],
             '2xx量': [status_200_count],
+            '2xx_html量': [status_200_html_count],  # 新增的统计项
             '45xx量': [status_45xx_count],
             # '剔除预期3xx4xx和不重要的请求': [non_34xx_count],
             # '剔除34xx预期和不重要的接口': [valid_city_count],
