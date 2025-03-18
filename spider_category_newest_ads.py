@@ -33,7 +33,7 @@ def process_city_data():
     result_df = pd.DataFrame(columns=['city', 'url', 'id', 'category', 'created'])
 
     # 获取24小时前的时间戳
-    one_day_ago = int((datetime.now() - timedelta(days=1)).timestamp())
+    one_day_ago = int((datetime.now() - timedelta(hours=2)).timestamp())
 
     # 当前时间作为文件名
     current_time = datetime.now().strftime("%Y%m%d")
@@ -62,7 +62,7 @@ def process_city_data():
             # 检查创建时间是否在24小时内
             if int(item['created']) < one_day_ago:
                 continue
-            elif n >= 20:
+            elif n >= 50:
                 continue
             n = n+1
 

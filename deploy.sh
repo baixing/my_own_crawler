@@ -13,7 +13,7 @@ chmod +x "$SCRIPT_DIR/run_submit.py"
 
 # 检查是否已经存在crontab项
 CRAWLER_CRON="5 */2 * * * cd $SCRIPT_DIR && /usr/bin/python3 $SCRIPT_DIR/run_crawler.py >> $SCRIPT_DIR/logs/cron.log 2>&1"
-SUBMIT_CRON="0 0,12 * * * cd $SCRIPT_DIR && /usr/bin/python3 $SCRIPT_DIR/run_submit.py >> $SCRIPT_DIR/logs/cron_submit.log 2>&1"
+SUBMIT_CRON="20 */2 * * * cd $SCRIPT_DIR && /usr/bin/python3 $SCRIPT_DIR/run_submit.py >> $SCRIPT_DIR/logs/cron_submit.log 2>&1"
 
 # 更新crontab
 (crontab -l 2>/dev/null | grep -Fv "$SCRIPT_DIR/run_crawler.py" | grep -Fv "$SCRIPT_DIR/run_submit.py"; echo "$CRAWLER_CRON"; echo "$SUBMIT_CRON") | crontab -
