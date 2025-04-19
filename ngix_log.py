@@ -65,12 +65,12 @@ def extract_tarfile(tar_path, extract_dir):
         return False
 
 
-def grep_baidu(directory, output_file):
+def grep_source(directory, output_file,source='baidu'):
     """使用grep查找包含baidu的行"""
     print(f"正在查找包含'baidu'的行...")
     try:
         # 使用grep递归搜索目录中所有文件
-        cmd = f"grep -r 'baidu' {directory} > {output_file}"
+        cmd = f"grep -r '{source}' {directory} > {output_file}"
         subprocess.run(cmd, shell=True, check=True)
 
         # 检查结果文件大小
@@ -282,7 +282,7 @@ def convert_to_excel(text_file, excel_file):
         date = time_parts[0]  # "03-04"
         hour = time_parts[1].split(':')[0]  # "14"
         date_parts = date.split('-')  # ["03", "04"]
-        current_dir_excel = f"{date_parts[0]}_{date_parts[1]}_{hour}_result.xlsx"
+        current_dir_excel = f"new_result.xlsx"
 
         # 复制一份Excel文件到当前目录
         df.to_excel(current_dir_excel, index=False, engine="openpyxl")
@@ -295,11 +295,11 @@ def convert_to_excel(text_file, excel_file):
         return False
 
 
-def main():
+def main(source='baidu'):
     """主函数"""
     # 创建时间戳文件夹
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    work_dir = f"baixing_seo_{timestamp}"
+    work_dir = f"baixing_seo"
     if not os.path.exists(work_dir):
         os.makedirs(work_dir)
 
@@ -307,18 +307,21 @@ def main():
     url = "http://examine.baixing.com/logs/baixing_seo.tar.gz"
     tar_file = os.path.join(work_dir, "baixing_seo.tar.gz")
     extract_dir = os.path.join(work_dir, "extracted")
-    baidu_log = os.path.join(work_dir, "baidu_results.txt")
-    excel_file = os.path.join(work_dir, "baidu_results.xlsx")
+    baidu_log = os.path.join(work_dir, f"{source}_results.txt")
+    excel_file = os.path.join(work_dir, f"{source}_results.xlsx")
+
+
 
     # 执行任务
     if download_file(url, tar_file):
         if extract_tarfile(tar_file, extract_dir):
-            if grep_baidu(extract_dir, baidu_log):
+            if grep_source(extract_dir, baidu_log,source):
                 convert_to_excel(baidu_log, excel_file)
+
 
     print(f"\n所有任务完成! 结果保存在目录: {work_dir}")
     print(f"Excel文件路径: {excel_file}")
 
 
 if __name__ == "__main__":
-    main()
+    main('baidu')

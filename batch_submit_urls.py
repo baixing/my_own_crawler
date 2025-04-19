@@ -184,7 +184,7 @@ def main():
     current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     # 设置文件路径
-    excel_file = f"category_ads_{current_date}.xlsx"
+    excel_file = f"category_ads_new.xlsx"
     log_file = f"baidu_submit_{current_time}.log"
     
     # 设置日志记录器

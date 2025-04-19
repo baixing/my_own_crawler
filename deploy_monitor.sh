@@ -88,7 +88,7 @@ fi
 
 # 启动应用
 echo -e "${YELLOW}启动应用...${NC}"
-nohup python app.py --port $PORT > $LOG_FILE 2>&1 & echo $! > $PID_FILE
+PYTHONUNBUFFERED=1 nohup python -u app.py --port $PORT > $LOG_FILE 2>&1 & echo $! > $PID_FILE
 
 # 等待应用启动
 echo -e "${YELLOW}等待应用启动...${NC}"
@@ -101,20 +101,18 @@ if ps -p $(cat $PID_FILE) > /dev/null; then
         echo -e "${GREEN}应用已成功启动 (PID: $(cat $PID_FILE))${NC}"
         echo "日志文件: $LOG_FILE"
         echo "访问地址: http://localhost:$PORT"
-        
-        # 显示最近的日志
-        echo -e "${YELLOW}最近的日志输出:${NC}"
-        tail -n 10 $LOG_FILE
+        echo -e "${GREEN}应用正在后台运行，可以使用以下命令查看日志：${NC}"
+        echo "tail -f $LOG_FILE"
     else
         echo -e "${RED}应用启动失败: 端口 $PORT 未被监听${NC}"
         echo -e "${YELLOW}查看日志内容:${NC}"
-        cat $LOG_FILE
+        tail -n 20 $LOG_FILE
         exit 1
     fi
 else
     echo -e "${RED}应用启动失败，进程未运行${NC}"
     echo -e "${YELLOW}查看日志内容:${NC}"
-    cat $LOG_FILE
+    tail -n 20 $LOG_FILE
     exit 1
 fi
 
@@ -140,4 +138,5 @@ EOL
 chmod +x stop_monitor.sh
 
 echo -e "${GREEN}部署完成！${NC}"
-echo "使用 ./stop_monitor.sh 可以停止应用" 
+echo "使用 ./stop_monitor.sh 可以停止应用"
+echo "使用 tail -f $LOG_FILE 可以查看应用日志" 

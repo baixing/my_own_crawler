@@ -15,7 +15,7 @@ def setup_logging():
         os.makedirs(log_dir)
     
     timestamp = datetime.now().strftime("%Y%m%d")
-    log_file = os.path.join(log_dir, f"submit_task_{timestamp}.log")
+    log_file = os.path.join(log_dir, f"submit_task_new.log")
     
     logging.basicConfig(
         level=logging.INFO,

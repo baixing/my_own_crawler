@@ -14,8 +14,11 @@ class BaiduTongji:
             'Cookie': 'BAIDUID=2F6CB9E7FD17A3039DB0526638F0983E:FG=1; BAIDUID_BFESS=2F6CB9E7FD17A3039DB0526638F0983E:FG=1'
         }
         self.username = 'Baixing1'
-        self.access_token = 'eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhY2MiLCJhdWQiOiLnmb7luqbnu5_orqEiLCJ1aWQiOjMxODM0OTgsImFwcElkIjoiMTNiZDUwNDlhNjc2ZDEwNzM3OTU5OTMyMTAyZWM1NTciLCJpc3MiOiLllYbkuJrlvIDlj5HogIXkuK3lv4MiLCJwbGF0Zm9ybUlkIjoiNDk2MDM0NTk2NTk1ODU2MTc5NCIsImV4cCI6MTc0MzkzNzE1NiwianRpIjoiLTkwMzU4NTY3ODgzNTcxNDQ1NTkifQ.nvOq-79FEwTH7Nk1KF5ZKF45-giiy9HkkBx51Ap4UWAoLrHqT0RhGtHQJeB5KgjS'
+        self.access_token = 'eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhY2MiLCJhdWQiOiLnmb7luqbnu5_orqEiLCJ1aWQiOjMxODM0OTgsImFwcElkIjoiMTNiZDUwNDlhNjc2ZDEwNzM3OTU5OTMyMTAyZWM1NTciLCJpc3MiOiLllYbkuJrlvIDlj5HogIXkuK3lv4MiLCJwbGF0Zm9ybUlkIjoiNDk2MDM0NTk2NTk1ODU2MTc5NCIsImV4cCI6MTc0NzY3MTcyNCwianRpIjoiLTkwOTA2OTUyNzQzODk5NzA5MzMifQ.6_D0hHIlsMFY2Ws2JHWUh4WAXMfydAOnhwwkOZ9JbiLSrJCUriB95AT97QDj43OY'
         self.site_id = '21587738'
+        # self.site_id = '8393754' # 原有的
+
+
         
     def get_trend_data(self, start_date, end_date):
         """获取趋势数据"""

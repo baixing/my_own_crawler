@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>洛邑（baixing.com.cn）数据统计</title>
+    <title>百姓网项目数据</title>
     <meta charset="utf-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
     <style>
         .card {
             margin-bottom: 20px;
@@ -108,64 +109,312 @@
             font-size: 20px;
             font-weight: bold;
         }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+        .fengming-content {
+            text-align: center;
+            padding: 50px 0;
+            font-size: 24px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
-        <h1 class="page-title text-center">洛邑</h1>
-        <h2 class="page-subtitle text-center">baixing.com.cn 实时数据监控</h2>
+        <h1 class="page-title text-center">百姓网数据监控</h1>
         
-        <div class="main-content">
-            <!-- 左侧内容 -->
-            <div class="left-section">
-                <!-- 页面访问数据 -->
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">页面访问数据</h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>页面URL</th>
-                                        <th class="text-end">浏览量(PV)</th>
-                                        <th class="text-end">下游贡献量</th>
-                                        <th class="text-end">下游贡献率</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pageTableBody">
-                                    <tr>
-                                        <td colspan="4" class="text-center">加载中...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+        <!-- 导航栏 -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="fengming-tab" data-bs-toggle="tab" data-bs-target="#fengming" type="button" role="tab">凤鸣</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="luoyi-tab" data-bs-toggle="tab" data-bs-target="#luoyi" type="button" role="tab">洛邑</button>
+            </li>
+        </ul>
+
+        <!-- 内容区域 -->
+        <div class="tab-content" id="myTabContent">
+            <!-- 凤鸣页面 -->
+            <div class="tab-pane fade show active" id="fengming" role="tabpanel">
+                <div class="row">
+                    <!-- 左侧区域 -->
+                    <div class="col-md-3">
+                        <!-- 筛选条件 -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">筛选条件</h5>
+                                <form id="filterForm">
+                                    <div class="mb-3">
+                                        <label for="userId" class="form-label">用户ID</label>
+                                        <input type="number" class="form-control" id="userId" placeholder="输入用户ID（为空则查询所有用户）">
+                                        <div class="form-text text-muted">不填写用户ID将查询所有用户的记录</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="typeSelect" class="form-label">日志类型</label>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="typeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                选择日志类型
+                                            </button>
+                                            <ul class="dropdown-menu w-100" aria-labelledby="typeDropdown">
+                                                <li>
+                                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="selectAll" checked>
+                                                            <label class="form-check-label" for="selectAll">全选</label>
+                                                        </div>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleAll">反选</button>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="0" id="type0" checked>
+                                                        <label class="form-check-label" for="type0">充值</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="1" id="type1" checked>
+                                                        <label class="form-check-label" for="type1">退款</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="4" id="type4" checked>
+                                                        <label class="form-check-label" for="type4">从冻结消耗</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="5" id="type5" checked>
+                                                        <label class="form-check-label" for="type5">直接消耗</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="6" id="type6" checked>
+                                                        <label class="form-check-label" for="type6">从负债消耗</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="7" id="type7" checked>
+                                                        <label class="form-check-label" for="type7">过期</label>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input type-checkbox" type="checkbox" value="8" id="type8" checked>
+                                                        <label class="form-check-label" for="type8">负债</label>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dateRange" class="form-label">日期范围</label>
+                                        <input type="text" class="form-control" id="dateRange" placeholder="选择日期范围">
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">查询</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧区域 -->
+                    <div class="col-md-9">
+                        <!-- 账户余额信息 -->
+                        <div class="card mb-3" id="accountInfoCard" style="display: none;">
+                            <div class="card-body py-2">
+                                <h6 class="card-title mb-2">账户余额信息</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>账号类型</th>
+                                                <th class="text-end">历史充值</th>
+                                                <th class="text-end">当前余额</th>
+                                                <th class="text-end">历史真钱</th>
+                                                <th class="text-end">剩余真钱</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="accountInfoBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 消耗统计 -->
+                        <div class="card mb-3" id="consumptionCard" style="display: none;">
+                            <div class="card-body py-2">
+                                <h6 class="card-title mb-2">消耗统计（分）</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">今日消耗</div>
+                                            <div class="fw-bold" id="todayConsumption">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">昨日消耗</div>
+                                            <div class="fw-bold" id="yesterdayConsumption">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">近7日消耗</div>
+                                            <div class="fw-bold" id="weekConsumption">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">近30日消耗</div>
+                                            <div class="fw-bold" id="monthConsumption">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 充值统计 -->
+                        <div class="card mb-3" id="rechargeCard" style="display: none;">
+                            <div class="card-body py-2">
+                                <h6 class="card-title mb-2">充值统计（分）</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">今日充值</div>
+                                            <div class="fw-bold" id="todayRecharge">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">昨日充值</div>
+                                            <div class="fw-bold" id="yesterdayRecharge">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">近7日充值</div>
+                                            <div class="fw-bold" id="weekRecharge">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-2 text-center">
+                                            <div class="small text-muted">近30日充值</div>
+                                            <div class="fw-bold" id="monthRecharge">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 查询结果 -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">查询结果</h5>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="exportBtn">
+                                        <i class="bi bi-download"></i> 导出Excel
+                                    </button>
+                                </div>
+                                <div class="table-responsive" style="min-height: 400px;">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>用户ID</th>
+                                                <th>所属大类</th>
+                                                <th>细分类目</th>
+                                                <th>类型</th>
+                                                <th>日期</th>
+                                                <th>金额（分）</th>
+                                                <th>真钱（分）</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="resultTableBody">
+                                            <tr>
+                                                <td colspan="7" class="text-center">请填写筛选条件并查询</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center mb-0" id="pagination">
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 右侧内容 -->
-            <div class="right-section">
-                <!-- 主要指标卡片 -->
-                <div class="metric-card card">
-                    <div class="card-body">
-                        <h6 class="metric-title">浏览量(PV)</h6>
-                        <div class="metric-value" id="pv">--</div>
-                        <small>昨日: <span id="yesterdayPv">--</span></small>
+            <!-- 洛邑页面 -->
+            <div class="tab-pane fade" id="luoyi" role="tabpanel">
+                <h2 class="page-subtitle text-center">baixing.com.cn 实时数据监控</h2>
+                
+                <div class="main-content">
+                    <!-- 左侧内容 -->
+                    <div class="left-section">
+                        <!-- 页面访问数据 -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">页面访问数据</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>页面URL</th>
+                                                <th class="text-end">浏览量(PV)</th>
+                                                <th class="text-end">下游贡献量</th>
+                                                <th class="text-end">下游贡献率</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pageTableBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center">加载中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="metric-card card">
-                    <div class="card-body">
-                        <h6 class="metric-title">访客数(UV)</h6>
-                        <div class="metric-value" id="uv">--</div>
-                        <small>昨日: <span id="yesterdayUv">--</span></small>
-                    </div>
-                </div>
 
-                <!-- 趋势图表 -->
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">访问趋势</h5>
-                        <div id="trendChart"></div>
+                    <!-- 右侧内容 -->
+                    <div class="right-section">
+                        <!-- 主要指标卡片 -->
+                        <div class="metric-card card">
+                            <div class="card-body">
+                                <h6 class="metric-title">浏览量(PV)</h6>
+                                <div class="metric-value" id="pv">--</div>
+                                <small>昨日: <span id="yesterdayPv">--</span></small>
+                            </div>
+                        </div>
+                        <div class="metric-card card">
+                            <div class="card-body">
+                                <h6 class="metric-title">访客数(UV)</h6>
+                                <div class="metric-value" id="uv">--</div>
+                                <small>昨日: <span id="yesterdayUv">--</span></small>
+                            </div>
+                        </div>
+
+                        <!-- 趋势图表 -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">访问趋势</h5>
+                                <div id="trendChart"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,6 +426,30 @@
         </div>
     </div>
 
+    <!-- 导出确认模态框 -->
+    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportConfirmModalLabel">导出确认</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    数据总量：<span id="exportDataCount" class="fw-bold"></span> 条，确认导出吗？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmExportBtn">确认导出</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <script>
         // 初始化图表
         var chartDom = document.getElementById('trendChart');
@@ -303,6 +576,348 @@
         // 监听窗口大小变化，调整图表大小
         window.addEventListener('resize', function() {
             myChart.resize();
+        });
+
+        // 初始化日期范围选择器
+        $('#dateRange').daterangepicker({
+            locale: {
+                format: 'YY-MM-DD',
+                applyLabel: '确定',
+                cancelLabel: '取消',
+                fromLabel: '从',
+                toLabel: '至',
+                customRangeLabel: '自定义',
+                daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                firstDay: 1
+            },
+            startDate: moment().subtract(1, 'year'),
+            endDate: moment(),
+            ranges: {
+                '今天': [moment(), moment()],
+                '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                '最近7天': [moment().subtract(6, 'days'), moment()],
+                '最近30天': [moment().subtract(29, 'days'), moment()],
+                '最近90天': [moment().subtract(89, 'days'), moment()],
+                '最近180天': [moment().subtract(179, 'days'), moment()],
+                '最近1年': [moment().subtract(1, 'year'), moment()],
+                '本月': [moment().startOf('month'), moment().endOf('month')],
+                '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        });
+
+        // 凤鸣页面相关功能
+        // 全选/反选功能
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.type-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateTypeDropdownText();
+        });
+
+        document.getElementById('toggleAll').addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('.type-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !checkbox.checked;
+            });
+            document.getElementById('selectAll').checked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            updateTypeDropdownText();
+        });
+
+        // 监听单个复选框的变化
+        document.querySelectorAll('.type-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.type-checkbox');
+                document.getElementById('selectAll').checked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                updateTypeDropdownText();
+            });
+        });
+
+        function updateTypeDropdownText() {
+            const checkboxes = document.querySelectorAll('.type-checkbox');
+            const selectedCount = Array.from(checkboxes).filter(checkbox => checkbox.checked).length;
+            const dropdownButton = document.getElementById('typeDropdown');
+            
+            if (selectedCount === checkboxes.length) {
+                dropdownButton.textContent = '全部日志类型';
+            } else if (selectedCount === 0) {
+                dropdownButton.textContent = '选择日志类型';
+            } else {
+                dropdownButton.textContent = `已选择 ${selectedCount} 个类型`;
+            }
+        }
+
+        function updateAccountInfo(accountInfo) {
+            const card = document.getElementById('accountInfoCard');
+            const tbody = document.getElementById('accountInfoBody');
+            
+            if (accountInfo && accountInfo.length > 0) {
+                card.style.display = 'block';
+                tbody.innerHTML = '';
+                
+                accountInfo.forEach(account => {
+                    const row = document.createElement('tr');
+                    const accountType = account.account_type === 0 ? '老凤鸣' : '易百搜';
+                    row.innerHTML = `
+                        <td>${accountType}</td>
+                        <td class="text-end">${account.history_amount.toLocaleString()}</td>
+                        <td class="text-end">${account.current_balance.toLocaleString()}</td>
+                        <td class="text-end">${account.history_money.toLocaleString()}</td>
+                        <td class="text-end">${account.current_money.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        function updateConsumptionStats(stats) {
+            const card = document.getElementById('consumptionCard');
+            if (stats) {
+                card.style.display = 'block';
+                document.getElementById('todayConsumption').textContent = stats.today.toLocaleString();
+                document.getElementById('yesterdayConsumption').textContent = stats.yesterday.toLocaleString();
+                document.getElementById('weekConsumption').textContent = stats.last_7_days.toLocaleString();
+                document.getElementById('monthConsumption').textContent = stats.last_30_days.toLocaleString();
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        function updateRechargeStats(stats) {
+            const card = document.getElementById('rechargeCard');
+            if (stats) {
+                card.style.display = 'block';
+                document.getElementById('todayRecharge').textContent = stats.today.toLocaleString();
+                document.getElementById('yesterdayRecharge').textContent = stats.yesterday.toLocaleString();
+                document.getElementById('weekRecharge').textContent = stats.last_7_days.toLocaleString();
+                document.getElementById('monthRecharge').textContent = stats.last_30_days.toLocaleString();
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('userId').value.trim();
+            const types = Array.from(document.querySelectorAll('.type-checkbox:checked')).map(input => input.value);
+            const dateRange = $('#dateRange').val();
+            
+            // 更新下拉按钮文本
+            const selectedCount = types.length;
+            const dropdownButton = document.getElementById('typeDropdown');
+            if (selectedCount === 7) {
+                dropdownButton.textContent = '全部日志类型';
+            } else if (selectedCount === 0) {
+                dropdownButton.textContent = '选择日志类型';
+            } else {
+                dropdownButton.textContent = `已选择 ${selectedCount} 个类型`;
+            }
+            
+            // 显示加载状态
+            const tbody = document.getElementById('resultTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">加载中...</td></tr>';
+            
+            fetch('/api/fengming/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId === '' ? null : userId,
+                    types: types,
+                    date_range: dateRange,
+                    page: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateResultTable(data.data);
+                    updatePagination(data.total, data.page, data.page_size);
+                    updateAccountInfo(data.account_info);
+                    updateConsumptionStats(data.consumption_stats);
+                    updateRechargeStats(data.recharge_stats);
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">查询失败：' + data.message + '</td></tr>';
+                    alert('查询失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">查询出错：' + error.message + '</td></tr>';
+                console.error('查询出错：', error);
+            });
+        });
+
+        function updateResultTable(data) {
+            const tbody = document.getElementById('resultTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.user_id || '--'}</td>
+                    <td>${item.first_category || '未知'}</td>
+                    <td>${item.second_category || '未知'}</td>
+                    <td>${item.type_desc}</td>
+                    <td>${item.created_date}</td>
+                    <td>${item.amount.toLocaleString()}</td>
+                    <td>${item.money.toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination(total, currentPage, pageSize) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            const totalPages = Math.ceil(total / pageSize);
+            
+            // 上一页
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>`;
+            pagination.appendChild(prevLi);
+            
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                pagination.appendChild(li);
+            }
+            
+            // 下一页
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>`;
+            pagination.appendChild(nextLi);
+            
+            // 添加点击事件
+            pagination.querySelectorAll('.page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.dataset.page);
+                    if (page >= 1 && page <= totalPages) {
+                        // 重新查询数据
+                        const userId = document.getElementById('userId').value.trim();
+                        const types = Array.from(document.querySelectorAll('#typeDropdown + .dropdown-menu .form-check-input:checked')).map(input => input.value);
+                        const dateRange = $('#dateRange').val();
+                        
+                        fetch('/api/fengming/query', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                user_id: userId === '' ? null : userId,
+                                types: types,
+                                date_range: dateRange,
+                                page: page
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                updateResultTable(data.data);
+                                updatePagination(data.total, data.page, data.page_size);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // 导出Excel功能
+        let exportModal = new bootstrap.Modal(document.getElementById('exportConfirmModal'));
+        
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const userId = document.getElementById('userId').value.trim();
+            const types = Array.from(document.querySelectorAll('.type-checkbox:checked')).map(input => input.value);
+            const dateRange = $('#dateRange').val();
+            
+            // 先获取数据总量
+            fetch('/api/fengming/count', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId === '' ? null : userId,
+                    types: types,
+                    date_range: dateRange
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const count = data.count;
+                    const countElement = document.getElementById('exportDataCount');
+                    countElement.textContent = count.toLocaleString();
+                    countElement.style.color = count > 10000 ? '#dc3545' : 'inherit';
+                    exportModal.show();
+                } else {
+                    throw new Error(data.message || '获取数据量失败');
+                }
+            })
+            .catch(error => {
+                alert('获取数据量失败：' + error.message);
+            });
+        });
+
+        document.getElementById('confirmExportBtn').addEventListener('click', function() {
+            const userId = document.getElementById('userId').value.trim();
+            const types = Array.from(document.querySelectorAll('.type-checkbox:checked')).map(input => input.value);
+            const dateRange = $('#dateRange').val();
+            
+            // 显示加载状态
+            const exportBtn = this;
+            const originalText = exportBtn.innerHTML;
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 导出中...';
+            
+            fetch('/api/fengming/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId === '' ? null : userId,
+                    types: types,
+                    date_range: dateRange
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('导出失败');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // 创建下载链接
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `fengming_export_${moment().format('YYYYMMDD_HHmmss')}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                // 关闭模态框
+                exportModal.hide();
+            })
+            .catch(error => {
+                alert('导出失败：' + error.message);
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = originalText;
+            });
         });
     </script>
 </body>
