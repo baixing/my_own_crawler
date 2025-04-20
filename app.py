@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, make_response
 from datetime import datetime, timedelta, date
 from baidu_tongji_api import BaiduTongji
 import json
@@ -547,16 +547,16 @@ def fengming_export():
                         if isinstance(industry_info, dict) and 'first' in industry_info and 'second' in industry_info:
                             result['first_category'] = industry_info['first']  # 所属大类
                             result['second_category'] = industry_info['second']  # 细分类目
-                            print(f"[DEBUG] 用户 {user_id} 的行业信息: 所属大类={result['first_category']}, 细分类目={result['second_category']}")
                         else:
-                            # 如果是旧格式，两个分类都设置为相同的值
                             result['first_category'] = industry_info
                             result['second_category'] = industry_info
-                            print(f"[DEBUG] 用户 {user_id} 使用旧格式行业信息: {industry_info}")
                 except Exception as e:
                     print(f"[ERROR] 处理用户 {user_id} 的行业信息时出错: {str(e)}")
                     result['first_category'] = '未知'
                     result['second_category'] = '未知'
+        
+        cursor.close()
+        connection.close()
         
         # 创建DataFrame
         df = pd.DataFrame(results)
@@ -566,29 +566,24 @@ def fengming_export():
         df.columns = ['用户ID', '所属大类', '细分类目', '类型', '日期', '金额（分）', '真钱（分）']
         
         # 创建一个字节流
-        output = io.BytesIO()
+        output = io.StringIO()
         
-        # 将DataFrame写入Excel
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='数据导出')
-            
-            # 调整列宽
-            worksheet = writer.sheets['数据导出']
-            for idx, col in enumerate(df.columns):
-                max_length = max(df[col].astype(str).apply(len).max(), len(col)) + 2
-                worksheet.column_dimensions[chr(65 + idx)].width = max_length
+        # 将DataFrame写入CSV，确保中文正确显示
+        df.to_csv(output, index=False, encoding='utf-8-sig')
         
-        output.seek(0)
+        # 获取CSV内容
+        csv_data = output.getvalue()
+        output.close()
         
         # 生成文件名
-        filename = f"fengming_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        filename = f"fengming_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=filename
-        )
+        # 创建响应
+        response = make_response(csv_data)
+        response.headers['Content-Type'] = 'text/csv; charset=utf-8-sig'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
         
     except Exception as e:
         print(f"Export Error: {str(e)}")
