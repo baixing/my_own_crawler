@@ -580,8 +580,8 @@ def fengming_export():
         
         # 创建响应
         response = make_response(csv_data)
-        response.headers['Content-Type'] = 'text/csv; charset=utf-8-sig'
-        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = f'attachment; filename*=UTF-8\'\'{filename}'
         
         return response
         
