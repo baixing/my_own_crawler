@@ -565,23 +565,18 @@ def fengming_export():
         df = df[['user_id', 'first_category', 'second_category', 'type_desc', 'created_date', 'amount', 'money']]
         df.columns = ['用户ID', '所属大类', '细分类目', '类型', '日期', '金额（分）', '真钱（分）']
         
-        # 创建一个字节流
-        output = io.StringIO()
-        
-        # 将DataFrame写入CSV，确保中文正确显示
-        df.to_csv(output, index=False, encoding='utf-8-sig')
-        
-        # 获取CSV内容
-        csv_data = output.getvalue()
-        output.close()
+        # 生成CSV数据
+        csv_data = df.to_csv(index=False, encoding='utf-8-sig')
         
         # 生成文件名
         filename = f"fengming_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
         # 创建响应
         response = make_response(csv_data)
-        response.headers['Content-Type'] = 'text/csv'
-        response.headers['Content-Disposition'] = f'attachment; filename*=UTF-8\'\'{filename}'
+        response.headers.clear()  # 清除所有默认的响应头
+        response.headers.add('Content-Type', 'text/csv; charset=utf-8')
+        response.headers.add('Content-Disposition', f'attachment; filename={filename}')
+        response.headers.add('Content-Length', len(csv_data))
         
         return response
         
